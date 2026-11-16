@@ -61,19 +61,27 @@ async function initFirebase(): Promise<FirebaseServices | null> {
   try {
     const app = initializeApp(firebaseConfig);
 
-    // App Check with the debug provider: on localhost the SDK exchanges the
-    // debug token for a real attestation token, which the hackathon rules
-    // explicitly accept. In production this same code path uses reCAPTCHA
-    // Enterprise attestation via the site key.
-    // App Check is only initialised once a real reCAPTCHA Enterprise site
-    // key is present in the config; with a placeholder key the provider
-    // would fail and take the whole Firebase init down with it. Enforcement
-    // is off by default, so Auth/Firestore/AI Logic work without it.
+    // App Check: production (hosted) builds use real reCAPTCHA Enterprise
+    // attestation via the site key. Debug tokens are a local/test-rig tool
+    // only (the hackathon rules explicitly accept them): honour a token the
+    // test harness pre-set on `self`, or let the SDK generate one on
+    // localhost — but NEVER force a debug token on a hosted origin, where an
+    // unregistered random token would fail attestation for every real user.
     if (isAppCheckConfigured) {
       if (typeof self !== "undefined") {
-        (self as unknown as { FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean })[
-          "FIREBASE_APPCHECK_DEBUG_TOKEN"
-        ] = true;
+        const scope = self as unknown as {
+          FIREBASE_APPCHECK_DEBUG_TOKEN?: string | boolean;
+          location?: Location;
+        };
+        const isLocalhost =
+          scope.location?.hostname === "localhost" ||
+          scope.location?.hostname === "127.0.0.1";
+        if (
+          scope["FIREBASE_APPCHECK_DEBUG_TOKEN"] === undefined &&
+          isLocalhost
+        ) {
+          scope["FIREBASE_APPCHECK_DEBUG_TOKEN"] = true;
+        }
       }
       initializeAppCheck(app, {
         provider: new ReCaptchaEnterpriseProvider(firebaseConfig.appCheckSiteKey),

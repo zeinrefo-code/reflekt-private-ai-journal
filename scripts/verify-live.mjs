@@ -55,6 +55,19 @@ const logs = [];
 try {
   const page = await browser.newPage();
   if (proxyAuth) await page.authenticate(proxyAuth);
+  // Optional fixed App Check debug token (test rigs only): when
+  // REFLEKT_APPCHECK_DEBUG_TOKEN is set, pre-seed it before any page script
+  // runs so the SDK exchanges THIS token. The token must be registered in
+  // the Firebase console (App Check -> app -> Manage debug tokens) or the
+  // exchange returns 403. Never commit a real token value here.
+  const debugToken = process.env.REFLEKT_APPCHECK_DEBUG_TOKEN;
+  if (debugToken) {
+    await page.evaluateOnNewDocument((t) => {
+      // @ts-expect-error test-rig global read by the Firebase SDK
+      self.FIREBASE_APPCHECK_DEBUG_TOKEN = t;
+    }, debugToken);
+    console.log("APP CHECK DEBUG TOKEN: pre-seeded from env");
+  }
   await page.setViewport({ width: 1280, height: 950 });
   page.on("pageerror", (e) => logs.push(`PAGEERROR: ${e.message}`));
   page.on("console", (m) => {
