@@ -16,7 +16,11 @@ import {
   initializeAppCheck,
   ReCaptchaEnterpriseProvider,
 } from "firebase/app-check";
-import { firebaseConfig, isFirebaseConfigured } from "./firebase-config";
+import {
+  firebaseConfig,
+  isAppCheckConfigured,
+  isFirebaseConfigured,
+} from "./firebase-config";
 
 export interface RemoteFlags {
   /** Remote Config: allow the cloud "Deep Reflection" feature. */
@@ -61,15 +65,21 @@ async function initFirebase(): Promise<FirebaseServices | null> {
     // debug token for a real attestation token, which the hackathon rules
     // explicitly accept. In production this same code path uses reCAPTCHA
     // Enterprise attestation via the site key.
-    if (typeof self !== "undefined") {
-      (self as unknown as { FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean })[
-        "FIREBASE_APPCHECK_DEBUG_TOKEN"
-      ] = true;
+    // App Check is only initialised once a real reCAPTCHA Enterprise site
+    // key is present in the config; with a placeholder key the provider
+    // would fail and take the whole Firebase init down with it. Enforcement
+    // is off by default, so Auth/Firestore/AI Logic work without it.
+    if (isAppCheckConfigured) {
+      if (typeof self !== "undefined") {
+        (self as unknown as { FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean })[
+          "FIREBASE_APPCHECK_DEBUG_TOKEN"
+        ] = true;
+      }
+      initializeAppCheck(app, {
+        provider: new ReCaptchaEnterpriseProvider(firebaseConfig.appCheckSiteKey),
+        isTokenAutoRefreshEnabled: true,
+      });
     }
-    initializeAppCheck(app, {
-      provider: new ReCaptchaEnterpriseProvider(firebaseConfig.appCheckSiteKey),
-      isTokenAutoRefreshEnabled: true,
-    });
 
     const auth = getAuth(app);
     const credential = await signInAnonymously(auth);
