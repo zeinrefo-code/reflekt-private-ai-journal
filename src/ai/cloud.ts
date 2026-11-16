@@ -11,7 +11,10 @@ import { getFirebaseServices } from "../lib/firebase";
  * the on-device model is not sized for.
  */
 
-const CLOUD_MODEL = "gemini-2.5-flash";
+// gemini-2.5-flash was retired for new users (generateContent returned 404
+// "no longer available to new users" on 2026-11-17); the API error itself
+// names gemini-3.8-flash as the successor to use.
+const CLOUD_MODEL = "gemini-3.8-flash";
 
 export async function isCloudReady(): Promise<boolean> {
   return (await getFirebaseServices()) !== null;
