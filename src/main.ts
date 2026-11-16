@@ -14,6 +14,7 @@ import {
   storageMode,
   updateEntryAnalysis,
   type JournalEntry,
+  type StorageMode,
 } from "./lib/store";
 import "./style.css";
 
@@ -22,7 +23,7 @@ const MOODS = ["Calm", "Happy", "Grateful", "Proud", "Reflective", "Tired", "Anx
 const state = {
   entries: [] as JournalEntry[],
   status: null as EngineStatus | null,
-  storage: "local" as "local" | "firestore",
+  storage: "local" as StorageMode,
   busy: false,
   reflection: "" as string,
   reflectionMeta: "" as string,
@@ -83,7 +84,7 @@ function renderApp(): void {
       </div>
     </div>
     <span class="badge ${state.storage === "firestore" ? "badge-cloud" : "badge-demo"}">
-      ${state.storage === "firestore" ? "Synced · Firestore" : "Demo mode · local storage"}
+      ${state.storage === "firestore" ? "Synced · Firestore" : state.storage === "cloud-unavailable" ? "Local mode · cloud sync unavailable" : "Demo mode · local storage"}
     </span>
   </header>
 
@@ -306,10 +307,31 @@ async function refreshStatus(): Promise<void> {
 
 async function boot(): Promise<void> {
   renderApp();
-  const [entries, storage] = await Promise.all([loadEntries(), storageMode()]);
-  state.entries = entries;
-  state.storage = storage;
-  await refreshStatus();
+  // loadEntries() runs first on purpose: if Firestore rejects the read it
+  // flips the store into its local fallback, and storageMode() — called
+  // afterwards — then honestly reports "cloud-unavailable" instead of
+  // claiming the app is synced. Every step is individually guarded so a
+  // storage or Firebase failure can never freeze the first render with the
+  // engine panel stuck on "Checking…".
+  try {
+    state.entries = await loadEntries();
+  } catch (err) {
+    console.warn("[Reflekt] Could not load entries; starting with an empty journal:", err);
+    state.entries = [];
+  }
+  state.storage = await storageMode().catch(() => "local" as StorageMode);
+  try {
+    await refreshStatus();
+  } catch (err) {
+    console.warn("[Reflekt] Engine status check failed:", err);
+    state.status = {
+      onDeviceState: "unavailable",
+      onDeviceDetail: "Status check failed — see console.",
+      cloudReady: false,
+      cloudDetail: "Status check failed — see console.",
+      mode: getEngineMode(),
+    };
+  }
   renderApp();
 
   // Debug/testing hook: lets a headless browser verify hybrid detection.
