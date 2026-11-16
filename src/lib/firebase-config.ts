@@ -11,6 +11,11 @@
 // filled in below, firebase.ts skips App Check initialisation (the rest of
 // Firebase — Auth, Firestore, Remote Config, AI Logic — works without it;
 // App Check enforcement is off by default).
+//
+// UPDATE 2026-11-17: site key filled in below — Muhammad created the
+// reCAPTCHA Enterprise (Fraud Defense) key and registered App Check in the
+// console (status: Registered). firebase.ts now initialises App Check with
+// the ReCaptchaEnterpriseProvider automatically.
 // ============================================================================
 
 export interface FirebaseWebConfig {
@@ -33,8 +38,9 @@ export const firebaseConfig: FirebaseWebConfig = {
   messagingSenderId: "438957688677",
   appId: "1:438957688677:web:feaf72f42fffc10d45438c",
   measurementId: "G-8TPX99VBGS",
-  // TODO: isi dengan site key App Check (reCAPTCHA Enterprise) dari console.
-  appCheckSiteKey: "GANTI-DENGAN-APPCHECK-SITE-KEY",
+  // App Check site key (reCAPTCHA Enterprise / Fraud Defense), registered in
+  // the Firebase console by Muhammad on 2026-11-17. Public identifier.
+  appCheckSiteKey: "6LfvgyMuAAAAALZfVcepZGgWnFNjyuxHHekgjNd7",
 };
 
 /** True once a real project config has been pasted above. */
