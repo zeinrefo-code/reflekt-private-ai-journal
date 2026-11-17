@@ -7,15 +7,11 @@
 // A Firebase web config is NOT a secret — it identifies the project, and
 // access is governed by Firebase Security Rules + App Check.
 //
-// Still missing: the App Check (reCAPTCHA Enterprise) site key. Until it is
-// filled in below, firebase.ts skips App Check initialisation (the rest of
-// Firebase — Auth, Firestore, Remote Config, AI Logic — works without it;
-// App Check enforcement is off by default).
-//
-// UPDATE 2026-11-17: site key filled in below — Muhammad created the
-// reCAPTCHA Enterprise (Fraud Defense) key and registered App Check in the
-// console (status: Registered). firebase.ts now initialises App Check with
-// the ReCaptchaEnterpriseProvider automatically.
+// App Check (reCAPTCHA Enterprise) site key: filled in below — Muhammad
+// created the Fraud Defense key and registered App Check in the console on
+// 2026-11-17 (status: Registered). firebase.ts initialises App Check with
+// the ReCaptchaEnterpriseProvider automatically; on localhost/test rigs a
+// registered debug token may be used instead (hackathon-accepted).
 // ============================================================================
 
 export interface FirebaseWebConfig {
