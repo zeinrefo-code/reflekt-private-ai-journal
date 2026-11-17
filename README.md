@@ -11,7 +11,7 @@ Every AI task is routed by a transparent hybrid engine (`src/ai/hybrid.ts`) acro
 | Path | Technology | Used for |
 | --- | --- | --- |
 | **On-device** | Gemini Nano via Chrome's Prompt API (`LanguageModel`) | Instant per-entry summary, themes and sentiment — private, offline, zero cost |
-| **Cloud** | **Firebase AI Logic** (`firebase/ai`, `GoogleAIBackend`, `gemini-2.5-flash`) | "Deep Reflection" across many entries — long context, heavier reasoning |
+| **Cloud** | **Firebase AI Logic** (`firebase/ai`, `GoogleAIBackend`, `gemini-3.8-flash`) | "Deep Reflection" across many entries — long context, heavier reasoning |
 | **Demo** | Deterministic local extractive engine | Graceful fallback so the app always works, even before Firebase is configured |
 
 Routing rules (Auto mode):
